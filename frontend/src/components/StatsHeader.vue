@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import type { DashboardStats } from '../types/task'
+import { getCategoryMeta } from '../constants/taskMeta'
+import type { CategoryStat, DashboardStats } from '../types/task'
 
 defineProps<{
   stats: DashboardStats
+  categoryStats: CategoryStat[]
+  activeCategory?: string
+}>()
+
+const emit = defineEmits<{
+  selectCategory: [category: string]
 }>()
 </script>
 
@@ -45,6 +52,20 @@ defineProps<{
         </el-card>
       </el-col>
     </el-row>
+
+    <div v-if="categoryStats.length > 0" class="category-bar">
+      <span class="category-bar-label">分类分布：</span>
+      <el-tag
+        v-for="item in categoryStats"
+        :key="item.category"
+        :type="getCategoryMeta(item.category).tagType"
+        :effect="activeCategory === item.category ? 'dark' : 'light'"
+        class="category-pill"
+        @click="emit('selectCategory', activeCategory === item.category ? '' : item.category)"
+      >
+        {{ getCategoryMeta(item.category).label }} · {{ item.count }}
+      </el-tag>
+    </div>
   </div>
 </template>
 
@@ -95,5 +116,20 @@ defineProps<{
 .highlight-blue { color: #2563eb; }
 .highlight-green { color: #16a34a; }
 .highlight-amber { color: #d97706; }
+.category-bar {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-bar-label {
+  font-size: 13px;
+  color: #64748b;
+}
+.category-pill {
+  cursor: pointer;
+  user-select: none;
+}
 </style>
 

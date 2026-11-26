@@ -51,6 +51,12 @@ export interface DashboardStats {
   cheerQuote: string
 }
 
+/** 对照后端 com.cheer.demo.dto.CategoryStatVO */
+export interface CategoryStat {
+  category: TaskCategory
+  count: number
+}
+
 export interface TaskQueryParams {
   keyword?: string
   category?: string

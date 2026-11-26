@@ -3,6 +3,10 @@ package com.cheer.demo.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cheer.demo.entity.CheerTask;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Param;
+import com.cheer.demo.dto.CategoryStatVO;
+
+import java.util.List;
 
 /**
  * 任务数据持久层接口（Mapper / DAO 层，唯一与 MySQL 数据库直接打交道的地方）
@@ -28,4 +32,7 @@ public interface CheerTaskMapper extends BaseMapper<CheerTask> {
      */
     @Select("SELECT COUNT(*) FROM cheer_task WHERE status = 2 AND DATE(completed_at) = CURDATE()")
     Long countTodayCompleted();
+
+    List<CategoryStatVO> countByCategory(@Param("status") Integer status);
+
 }

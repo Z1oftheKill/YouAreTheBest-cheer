@@ -2,6 +2,7 @@ package com.cheer.demo.controller;
 
 import com.cheer.demo.common.PageResult;
 import com.cheer.demo.common.Result;
+import com.cheer.demo.dto.CategoryStatVO;
 import com.cheer.demo.dto.DashboardStatsVO;
 import com.cheer.demo.dto.TaskSaveDTO;
 import com.cheer.demo.dto.TaskStatusDTO;
@@ -122,5 +123,10 @@ public class CheerTaskController {
     public Result<Void> batchDelete(@RequestBody List<Long> ids) {
         taskService.batchRemoveTasks(ids);
         return Result.ok();
+    }
+
+    @GetMapping("/category-stats")
+    public Result<List<CategoryStatVO>> getCategoryStats(@RequestParam(required = false)Integer status){
+        return Result.ok(taskService.getCategoryStats(status));
     }
 }

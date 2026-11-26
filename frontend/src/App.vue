@@ -6,7 +6,13 @@ import StatsHeader from './components/StatsHeader.vue'
 import TaskFilterBar from './components/TaskFilterBar.vue'
 import TaskTable from './components/TaskTable.vue'
 import TaskFormDialog from './components/TaskFormDialog.vue'
-import type { CheerTask, DashboardStats, TaskQueryParams, TaskSavePayload } from './types/task'
+import type {
+  CategoryStat,
+  CheerTask,
+  DashboardStats,
+  TaskQueryParams,
+  TaskSavePayload
+} from './types/task'
 
 const stats = ref<DashboardStats>({
   totalCount: 0,
@@ -16,6 +22,8 @@ const stats = ref<DashboardStats>({
   completionRate: 0,
   cheerQuote: ''
 })
+
+const categoryStats = ref<CategoryStat[]>([])
 
 const query = reactive<TaskQueryParams>({
   keyword: '',
@@ -37,13 +45,23 @@ const editingTask = ref<CheerTask | null>(null)
 async function loadAll() {
   loading.value = true
   try {
-    const [statsData, pageData] = await Promise.all([taskApi.getStats(), taskApi.getPage(query)])
+    const [statsData, catStatsData, pageData] = await Promise.all([
+      taskApi.getStats(),
+      taskApi.getCategoryStats(),
+      taskApi.getPage(query)
+    ])
     stats.value = statsData
+    categoryStats.value = catStatsData
     records.value = pageData.records
     total.value = pageData.total
   } finally {
     loading.value = false
   }
+}
+
+function handleSelectCategory(category: string) {
+  query.category = category
+  handleSearch()
 }
 
 function handleSearch() {
@@ -142,7 +160,12 @@ onMounted(loadAll)
 <template>
   <div class="page-shell">
     <div class="main-container">
-      <StatsHeader :stats="stats" />
+      <StatsHeader
+        :stats="stats"
+        :category-stats="categoryStats"
+        :active-category="query.category"
+        @select-category="handleSelectCategory"
+      />
 
       <TaskFilterBar
         v-model:query="query"

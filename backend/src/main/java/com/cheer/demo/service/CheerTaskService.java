@@ -6,6 +6,7 @@ import com.cheer.demo.common.PageResult;
 import com.cheer.demo.dto.DashboardStatsVO;
 import com.cheer.demo.dto.TaskSaveDTO;
 import com.cheer.demo.dto.TaskStatusDTO;
+import com.cheer.demo.dto.CategoryStatVO;
 import com.cheer.demo.entity.CheerTask;
 
 /**
@@ -36,9 +37,11 @@ public interface CheerTaskService {
     /** 快捷修改任务状态与打卡感悟（一键打卡） */
     CheerTask changeStatus(Long id, TaskStatusDTO dto);
 
+    /** 获取类别信息 */
+    List<CategoryStatVO> getCategoryStats(Integer status);
+
     /** 根据主键 ID 删除任务 */
     void removeTask(Long id);
-
     
     /** 根据主键 ID 批量删除任务 */
     void batchRemoveTasks(List<Long> ids);

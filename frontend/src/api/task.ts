@@ -1,5 +1,6 @@
 import { request } from '../utils/request'
 import type {
+  CategoryStat,
   CheerTask,
   DashboardStats,
   PageResult,
@@ -11,6 +12,10 @@ import type {
 export const taskApi = {
   getStats() {
     return request<DashboardStats>({ url: '/tasks/stats', method: 'GET' })
+  },
+
+  getCategoryStats() {
+    return request<CategoryStat[]>({ url: '/tasks/category-stats', method: 'GET' })
   },
 
   getPage(params: TaskQueryParams) {

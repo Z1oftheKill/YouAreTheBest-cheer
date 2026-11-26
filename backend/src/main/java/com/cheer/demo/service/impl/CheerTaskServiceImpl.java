@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cheer.demo.common.BusinessException;
 import com.cheer.demo.common.PageResult;
+import com.cheer.demo.dto.CategoryStatVO;
 import com.cheer.demo.dto.DashboardStatsVO;
 import com.cheer.demo.dto.TaskSaveDTO;
 import com.cheer.demo.dto.TaskStatusDTO;
@@ -220,6 +221,16 @@ public class CheerTaskServiceImpl implements CheerTaskService {
         if(ids == null || ids.isEmpty()) throw new BusinessException("请先勾选要删除的任务");
         taskMapper.deleteByIds(ids);
     }
+
+
+    /**
+     * 获取类目数量
+     */
+    @Override 
+    public List<CategoryStatVO> getCategoryStats(Integer status){
+        return taskMapper.countByCategory(status);
+    }
+
 
     /**
      * 内部辅助方法：将入参 DTO 的属性安全拷贝到数据库实体 Entity，并做去空格与默认值兜底
