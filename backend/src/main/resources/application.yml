@@ -1,0 +1,23 @@
+# 前端对照：相当于前端项目的 .env + server 配置
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cheer-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/cheer_demo?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${MYSQL_PWD:123456}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+mybatis-plus:
+  configuration:
+    # 自动将数据库下划线字段 completed_at 映射为 Java 驼峰属性 completedAt
+    map-underscore-to-camel-case: true
+    # 在控制台打印实际执行的 SQL，方便初学者直观观察数据库操作
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
