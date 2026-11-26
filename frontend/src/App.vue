@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { taskApi } from './api/task'
+import AuthDialog from './components/AuthDialog.vue'
 import StatsHeader from './components/StatsHeader.vue'
 import TaskFilterBar from './components/TaskFilterBar.vue'
 import TaskTable from './components/TaskTable.vue'
 import TaskFormDialog from './components/TaskFormDialog.vue'
+import { TOKEN_KEY, USER_KEY } from './utils/request'
+import type { LoginResult, UserInfo } from './types/auth'
 import type {
   CategoryStat,
   CheerTask,
@@ -13,6 +16,18 @@ import type {
   TaskQueryParams,
   TaskSavePayload
 } from './types/task'
+
+function readStoredUser(): UserInfo | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    return raw ? (JSON.parse(raw) as UserInfo) : null
+  } catch {
+    return null
+  }
+}
+
+const currentUser = ref<UserInfo | null>(readStoredUser())
+const authVisible = ref(false)
 
 const stats = ref<DashboardStats>({
   totalCount: 0,
@@ -54,9 +69,36 @@ async function loadAll() {
     categoryStats.value = catStatsData
     records.value = pageData.records
     total.value = pageData.total
+  } catch {
+    // 若未登录触发 401，request 拦截器已自动弹出登录弹窗
   } finally {
     loading.value = false
   }
+}
+
+function handleAuthSuccess(res: LoginResult) {
+  localStorage.setItem(TOKEN_KEY, res.token)
+  localStorage.setItem(USER_KEY, JSON.stringify(res.user))
+  currentUser.value = res.user
+  authVisible.value = false
+  query.pageNum = 1
+  loadAll()
+}
+
+function handleLogout() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+  currentUser.value = null
+  records.value = []
+  categoryStats.value = []
+  total.value = 0
+  authVisible.value = true
+  ElMessage.info('已退出登录')
+}
+
+function onUnauthorized() {
+  currentUser.value = null
+  authVisible.value = true
 }
 
 function handleSelectCategory(category: string) {
@@ -154,7 +196,14 @@ async function handleBatchDelete(ids: number[]) {
   }
 }
 
-onMounted(loadAll)
+onMounted(() => {
+  window.addEventListener('auth:unauthorized', onUnauthorized)
+  loadAll()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('auth:unauthorized', onUnauthorized)
+})
 </script>
 
 <template>
@@ -164,7 +213,10 @@ onMounted(loadAll)
         :stats="stats"
         :category-stats="categoryStats"
         :active-category="query.category"
+        :current-user="currentUser"
         @select-category="handleSelectCategory"
+        @open-login="authVisible = true"
+        @logout="handleLogout"
       />
 
       <TaskFilterBar
@@ -193,6 +245,8 @@ onMounted(loadAll)
         :submitting="submitting"
         @submit="handleSave"
       />
+
+      <AuthDialog v-model:visible="authVisible" @success="handleAuthSuccess" />
     </div>
   </div>
 </template>

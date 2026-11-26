@@ -25,6 +25,9 @@ public class CheerTask {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 任务所属用户 ID（关联 sys_user.id，用于多用户数据隔离） */
+    private Long userId;
+
     /** 任务/打卡标题（对应表中 title 列，VARCHAR(100)） */
     private String title;
 
@@ -74,6 +77,14 @@ public class CheerTask {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getTitle() {
