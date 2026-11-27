@@ -2,6 +2,7 @@ package com.cheer.demo.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -14,6 +15,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
+
+    private final AuthInterceptor authInterceptor;
+
+    public CorsConfig(AuthInterceptor authInterceptor) {
+        this.authInterceptor = authInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/api/tasks/**") // 拦截所有任务
+                .excludePathPatterns("/api/auth/**"); // 放行登录相关
+    }
 
     /**
      * 注册跨域规则（@Override 表示重写父接口 WebMvcConfigurer 定义的方法）

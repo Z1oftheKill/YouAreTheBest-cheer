@@ -8,6 +8,7 @@
         SELECT category, COUNT(*) AS count
         FROM cheer_task
         <where>
+             user_id = #{userId}
             <if test="status != null">
                 AND status = #{status}
             </if>

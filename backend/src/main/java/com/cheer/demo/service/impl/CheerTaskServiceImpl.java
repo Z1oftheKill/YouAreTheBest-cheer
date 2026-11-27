@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cheer.demo.common.BusinessException;
 import com.cheer.demo.common.PageResult;
+import com.cheer.demo.common.UserContext;
 import com.cheer.demo.dto.CategoryStatVO;
 import com.cheer.demo.dto.DashboardStatsVO;
 import com.cheer.demo.dto.TaskSaveDTO;
@@ -46,20 +47,26 @@ public class CheerTaskServiceImpl implements CheerTaskService {
      */
     @Override
     public DashboardStatsVO getStats() {
+
+        long userId = UserContext.getUserId();
+
         // 1. selectCount(null) 传 null 表示没有任何 WHERE 条件，直接查询全表总条数：SELECT COUNT(*) FROM
         // cheer_task
-        long total = taskMapper.selectCount(null);
+        long total = taskMapper.selectCount(new 
+            LambdaQueryWrapper<CheerTask>().eq(CheerTask::getUserId, userId)
+        );
 
         // 2. 使用 LambdaQueryWrapper 构造 WHERE status = 2 条件，统计累计已打卡数量
         long completed = taskMapper.selectCount(
-                new LambdaQueryWrapper<CheerTask>().eq(CheerTask::getStatus, 2));
+                new LambdaQueryWrapper<CheerTask>().eq(CheerTask::getStatus, 2)
+                .eq(CheerTask::getUserId ,userId));
 
         // 3. 构造 WHERE status = 1 条件，统计进行中数量
         long inProgress = taskMapper.selectCount(
-                new LambdaQueryWrapper<CheerTask>().eq(CheerTask::getStatus, 1));
+                new LambdaQueryWrapper<CheerTask>().eq(CheerTask::getStatus, 1).eq(CheerTask::getUserId, userId));
 
         // 4. 调用我们在 CheerTaskMapper 中手写 @Select SQL 的自定义方法，统计今日完成数量
-        Long todayDone = taskMapper.countTodayCompleted();
+        Long todayDone = taskMapper.countTodayCompleted(userId);
 
         // 5. 创建 VO 对象，将计算好的各项指标塞进去
         DashboardStatsVO vo = new DashboardStatsVO();
@@ -114,6 +121,7 @@ public class CheerTaskServiceImpl implements CheerTaskService {
                 .eq(status != null, CheerTask::getStatus, status)
                 // 4. 【你亲手实现的功能】当 priority 不为 null 时，拼接 AND priority = ?
                 .eq(priority != null, CheerTask::getPriority, priority)
+                .eq(CheerTask::getUserId, UserContext.getUserId())
                 // 5. 排序规则：未完成的排前面（status 升序） -> 紧急的排前面（priority 降序） -> 最新创建的排前面（id 降序）
                 .orderByAsc(CheerTask::getStatus)
                 .orderByDesc(CheerTask::getPriority)
@@ -134,7 +142,7 @@ public class CheerTaskServiceImpl implements CheerTaskService {
         // 执行 SELECT * FROM cheer_task WHERE id = ?
         CheerTask task = taskMapper.selectById(id);
         // 如果查不到，主动抛出 404 BusinessException，会被 GlobalExceptionHandler 捕获并返回给前端
-        if (task == null) {
+        if (task == null || !UserContext.getUserId().equals(task.getUserId())) {
             throw new BusinessException(404, "未找到 ID=" + id + " 的任务记录");
         }
         return task;
@@ -155,6 +163,7 @@ public class CheerTaskServiceImpl implements CheerTaskService {
         }
         // 4. 执行 INSERT INTO cheer_task ...（插入成功后，MySQL 生成的自增 ID 会自动回填到 entity.getId()
         // 中）
+        entity.setUserId(UserContext.getUserId());
         taskMapper.insert(entity);
         // 5. 重新按主键查出包含数据库默认 createdAt / updatedAt 的完整记录返回给前端
         return taskMapper.selectById(entity.getId());
@@ -219,7 +228,9 @@ public class CheerTaskServiceImpl implements CheerTaskService {
     public void batchRemoveTasks(List<Long> ids) {
         // 1. 先确认记录存在（若不存在则抛 404 提示）
         if(ids == null || ids.isEmpty()) throw new BusinessException("请先勾选要删除的任务");
-        taskMapper.deleteByIds(ids);
+        taskMapper.delete(new LambdaQueryWrapper<CheerTask>()
+                .in(CheerTask::getId, ids)
+                .eq(CheerTask::getUserId, UserContext.getUserId()));
     }
 
 
@@ -228,7 +239,7 @@ public class CheerTaskServiceImpl implements CheerTaskService {
      */
     @Override 
     public List<CategoryStatVO> getCategoryStats(Integer status){
-        return taskMapper.countByCategory(status);
+        return taskMapper.countByCategory(UserContext.getUserId(), status);
     }
 
 

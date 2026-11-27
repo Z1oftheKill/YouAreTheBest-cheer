@@ -30,9 +30,9 @@ public interface CheerTaskMapper extends BaseMapper<CheerTask> {
      * 当内置的单表方法不够用（比如需要用 MySQL 日期函数或 GROUP BY / 多表 JOIN）时，
      * 直接在方法上贴 @Select("原生 SQL 语句") 即可执行并自动把结果转为返回值 Long！
      */
-    @Select("SELECT COUNT(*) FROM cheer_task WHERE status = 2 AND DATE(completed_at) = CURDATE()")
-    Long countTodayCompleted();
+    @Select("SELECT COUNT(*) FROM cheer_task WHERE status = 2 AND DATE(completed_at) = CURDATE() AND user_id = #{userId}")
+    Long countTodayCompleted(@Param("userId") Long userId);
 
-    List<CategoryStatVO> countByCategory(@Param("status") Integer status);
+    List<CategoryStatVO> countByCategory(@Param("userId") Long userId, @Param("status") Integer status);
 
 }
